@@ -85,7 +85,7 @@ def distance_guard(source):
     return [max(values) + max(.5, median(values)) for values in axes]
 
 
-def calculate(records, *, history, cutoff, iterations=180):
+def calculate(records, *, history, cutoff, iterations=180, baseline_id=None):
     from .contracts import parse
     if not 1 <= iterations <= 500:
         raise ValueError('INVALID_LOGISTIC_ITERATIONS')
@@ -93,7 +93,7 @@ def calculate(records, *, history, cutoff, iterations=180):
     split = (len(inventory) * 3) // 4
     training, calibration = inventory[:split], inventory[split:]
     model = fit_coefficients(training, iterations=iterations)
-    signatures = sha256(repr((inventory, cutoff, iterations, 'w4-l2')).encode()).hexdigest()[:16]
+    signatures = sha256(repr((inventory, cutoff, iterations, 'w4-l2', baseline_id)).encode()).hexdigest()[:16]
     blocks = calibration_blocks((raw_score(row, model), row.found_mismatch) for row in calibration)
     limits = distance_guard(training)
     result = []

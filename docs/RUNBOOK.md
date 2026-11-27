@@ -5,3 +5,12 @@
 没有加载到样例时，先检查 `/health`。若健康接口已恢复，刷新页面并重新提交本班额度。输入超限会得到 `INVALID_SCENARIO`，页面保留上一次有效结果。
 
 复核记录可通过工作台下载。导出包含前台展示的全部批次结果及六个环节的证据，便于按运行指纹对照。
+
+## 称重设备更换后的基线重估
+
+设备台账位于样例数据顶层 `scales`，逐台登记门店、设备编号、安装日、退役日和设备误差下限。门店换秤时把旧设备 `retired_at` 设为换秤日、新增一行新设备服役区间；旧设备历史保留在原编号下，不会混入新设备基线。
+
+- 新设备某商品组样本不足最小样本量（默认 5）时，包裹以 `INSUFFICIENT_DEVICE_SAMPLES` 转人工，工作台不借其他门店或旧设备样本自动放行。
+- `退货特征` 环节证据给出每个「设备 × 商品组」的样本量、容忍度、设备下限和支持状态；对账区 `weight_baseline` 提供同一版本的 `baseline_id`。
+- 训练向量由 `pipeline.rebuild_learned_vectors` 用与在线相同的特征代码重建，训练与在线 `baseline_id` 不一致会直接抛出 `WEIGHT_BASELINE_DRIFT_BETWEEN_TRAIN_AND_SERVE`。
+- 本机可用 `python -I tools/verify_baseline.py` 复核设备隔离、人工兜底、训练/在线同口径和幂等性；样例数据由 `python -I tools/rebuild_sample_data.py` 确定性重建。

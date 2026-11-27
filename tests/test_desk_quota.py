@@ -56,3 +56,17 @@ def test_equivalent_candidates_do_not_consume_two_slots():
 def test_conflicting_payment_documents_are_blocked():
     with pytest.raises(ValueError, match='DESK_CONTRADICTORY_AUTHORIZATION'):
         evaluate([candidate(), candidate(amount=10)])
+
+
+def test_device_baseline_shortage_keeps_its_own_review_reason():
+    # 设备基线样本不足的包裹强制人工，原因码必须透传，不能被泛化
+    profile = candidate('R2', score=0, in_scope=False, reason='INSUFFICIENT_DEVICE_SAMPLES')
+    result = evaluate([candidate(), profile], capacity=2)['records']
+    target = next(row for row in result if row['rma'] == 'R2')
+    assert target['reason'] == 'INSUFFICIENT_DEVICE_SAMPLES'
+    assert target['state'] == '已派复核'
+
+
+def test_generic_unsupported_profile_still_uses_parcel_verification():
+    profile = candidate('R2', score=0, in_scope=False)  # reason 默认 CALIBRATED
+    assert evaluate([profile])['records'][0]['reason'] == 'PARCEL_VERIFICATION'

@@ -28,7 +28,10 @@ def order_queue(records, reserved_ratio):
 
 def review_priority(row, threshold):
     if not row.in_scope:
-        return 'PARCEL_VERIFICATION'
+        # 上游已给出明确的强制人工原因（设备基线不足、轮廓新颖等）时原样保留；
+        # 通用资料行仍回落到验包台核验
+        upstream = getattr(row, 'reason', None)
+        return upstream if upstream not in (None, 'CALIBRATED') else 'PARCEL_VERIFICATION'
     if not row.seal:
         return 'UNSEALED'
     if row.priority and row.score >= threshold * .75:

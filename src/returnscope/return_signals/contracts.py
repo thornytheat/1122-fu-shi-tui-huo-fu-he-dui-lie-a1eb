@@ -50,6 +50,7 @@ class ExpectedPackage:
     seal: bool
     amount: int
     priority: bool
+    scale: str | None = None
 
 
 def parse(values: Mapping[str, Any]) -> ExpectedPackage:
@@ -66,6 +67,13 @@ def parse(values: Mapping[str, Any]) -> ExpectedPackage:
     seal = flag(values, 'seal', 'return_signals.seal')
     amount = integer(values, 'amount', 1, 1000000, 'return_signals.amount')
     priority = flag(values, 'priority', 'return_signals.priority')
+    scale_value = values.get('scale')
+    if scale_value is None:
+        scale = None
+    elif not isinstance(scale_value, str) or not scale_value.strip() or len(scale_value.strip()) > 80:
+        raise InvalidRow('return_signals.scale', 'EXPECTED_NONEMPTY_TEXT')
+    else:
+        scale = scale_value.strip()
     return ExpectedPackage(
         rma=rma,
         original_shop=original_shop,
@@ -78,4 +86,5 @@ def parse(values: Mapping[str, Any]) -> ExpectedPackage:
         seal=seal,
         amount=amount,
         priority=priority,
+        scale=scale,
     )
